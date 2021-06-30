@@ -1,12 +1,16 @@
 // SPDX-License-Identifier: MIT
-pragma solidity >=0.4.21 <0.7.0;
+// cast address to address payable:
+// https://ethereum.stackexchange.com/questions/65693/how-to-cast-address-to-address-payable-in-solidity-0-5-0
+
+pragma solidity ^0.5.0;
 
 contract Casino {
     address public owner;
     uint256 public minimumBet;
     uint256 public totalBet;
     uint256 public numberOfBets;
-    uint256 public maxAmountOfBets = 100;
+    uint256 public maxAmountOfBets = 10;
+    uint256 public constant LIMIT_MAX_AMOUNT_BETS = 100;
     address[] public players;
 
     struct Player {
@@ -16,9 +20,12 @@ contract Casino {
 
     mapping(address => Player) public playerInfo;
 
-    constructor(uint256 _minBet) public {
+    constructor(uint256 _minBet, uint256 _maxBets) public {
         owner = msg.sender;
-        if(_minBet != 0) minimumBet = _minBet;
+        if(_minBet != 0)
+            minimumBet = _minBet;
+        if(_maxBets > 0 && _maxBets <= LIMIT_MAX_AMOUNT_BETS)
+            maxAmountOfBets = _maxBets;
     }
 
     // payable is a modifier.
@@ -27,7 +34,7 @@ contract Casino {
     function bet(uint256 _numberSelected) public payable {
         require(!checkPlayerExists(msg.sender));
         require(_numberSelected >= 1 && _numberSelected <= 10);
-        require(msg.value >= minmumBet);
+        require(msg.value >= minimumBet);
 
         playerInfo[msg.sender].amountBet = msg.value;
         playerInfo[msg.sender].numberSelected = _numberSelected;
@@ -41,7 +48,7 @@ contract Casino {
     // constant indicates this function does not call gas
     // since it is reading values that are already in the blockchain
     // players (is a state variable)
-    function checkPlayerExists(address _player) public constant returns(bool) {
+    function checkPlayerExists(address _player) public view returns(bool) {
         for(uint256 i = 0; i < players.length; i++) {
             if(players[i] == _player) return true;
         }
@@ -57,20 +64,20 @@ contract Casino {
         distributePrizes(winnerNumber);
     }
 
-    function distributePrizes(uint256 _winnerNumber) {
+    function distributePrizes(uint256 _winnerNumber) public {
         // why is it necesary to create fixed size array
-        address[100] memory winners;
+        address payable[100] memory winners;
         // count for the array of winners
         uint256 count = 0;
 
         for(uint256 i = 0; i < players.length; i++) {
             address playerAddress = players[i];
             if(playerInfo[playerAddress].numberSelected == _winnerNumber) {
-                winners[count] = playerAddress;
+                winners[count] = address(uint160(playerAddress));
                 count++;
             }
             // this will delete all the players betting data
-            delete playerAddress[playerAddress];
+            delete playerInfo[playerAddress];
         }
         resetData();
 
@@ -96,14 +103,14 @@ contract Casino {
     // Fallback function in case someone sends ether to the contract,
     // so it doesn't get lost and to increase the treasury of thi
     //  contract that will be distributed in each game
-    function() public payable {}
+    function() external payable {}
 
     // used to destroy contract.
     // last resort when contract has been compromised
     // and can't be secured
     function kill() public {
         if(msg.sender == owner) {
-            selfdestruct(owner);
+            selfdestruct(address(uint160(owner)));
         }
     }
 }
