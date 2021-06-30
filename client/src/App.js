@@ -1,11 +1,20 @@
 import React, { Component } from "react";
 import Casino from "./contracts/Casino.json";
 import getWeb3 from "./getWeb3";
+import Main from "./Main";
 
 import "./App.css";
 
 class App extends Component {
-  state = { storageValue: 0, web3: null, accounts: null, contract: null };
+  constructor() {
+    super();
+    this.state = {
+      storageValue: 0,
+      web3: null,
+      accounts: null,
+      contract: null
+    };
+  }
 
   componentDidMount = async () => {
     try {
@@ -22,7 +31,7 @@ class App extends Component {
         Casino.abi,
         deployedNetwork && deployedNetwork.address,
       );
-
+      console.log(instance)
       // Set web3, accounts, and contract to the state, and then proceed with an
       // example of interacting with the contract's methods.
       this.setState({ web3, accounts, contract: instance });
@@ -41,17 +50,8 @@ class App extends Component {
     }
     return (
       <div className="App">
-        <h1>Good to Go!</h1>
-        <p>Your Truffle Box is installed and ready.</p>
-        <h2>Smart Contract Example</h2>
-        <p>
-          If your contracts compiled and migrated successfully, below will show
-          a stored value of 5 (by default).
-        </p>
-        <p>
-          Try changing the value stored on <strong>line 42</strong> of App.js.
-        </p>
-        <div>The stored value is: {this.state.storageValue}</div>
+        <h2>Casino like Smart Contract Example</h2>
+        <Main {...this.state} />
       </div>
     );
   }
