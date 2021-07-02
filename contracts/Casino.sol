@@ -13,9 +13,22 @@ contract Casino {
     uint256 public constant LIMIT_MAX_AMOUNT_BETS = 100;
     address[] public players;
 
+    mapping(address => Casino[]) casinos; // { casinoOwnerAddress: [list of casinos] }
+    address[] public casinoOwners;
+    mapping(address => mapping(string => mapping(address => Player))) casinosPlayerInfo; // { casinoOwnerAddress: { casinoName: { playerAddress: player } }}
+
     struct Player {
         uint256 amountBet;
         uint256 numberSelected;
+    }
+
+    struct Casino {
+        string name;
+        uint256 minimumBet;
+        uint256 totalBet;
+        uint256 numberOfBets;
+        uint256 maxAmountOfBets;
+        address[] players;
     }
 
     mapping(address => Player) public playerInfo;
@@ -26,6 +39,29 @@ contract Casino {
             minimumBet = _minBet;
         if(_maxBets > 0 && _maxBets <= LIMIT_MAX_AMOUNT_BETS)
             maxAmountOfBets = _maxBets;
+    }
+
+    function createCasino(address _casinoOwner, string _casinoName, uint256 _minBet, uint256 _maxBets) public {
+        // TODO: check
+        require(!casinoNameExists(_casinoOwner, _casinoName), "Can't own two casinos with same name");
+
+        uint256 _minimumBet = 0.1;
+        uint256 _maxAmountOfBets = 10;
+        if(_minBet != 0)
+            _minimumBet = _minBet;
+        if(_maxBets > 0 && _maxBets <= LIMIT_MAX_AMOUNT_BETS)
+            _maxAmountOfBets = _maxBets;
+
+        Casino newCasion = Casino({ name: _casinoName, minimumBet: _minimumBet, maxAmountOfBets: _maxAmountOfBets });
+        casinos[_casinoOwner].push(newCasino);
+    }
+
+    function casinoNameExists(address _casinoOwner, string _casinoName) public {
+        for(uint256 i = 0; i < casinos[_casinoOwner].length; i++) {
+            if(casinos[_casinoOwner][i].name == _casinoName) return true;
+        }
+
+        return false;
     }
 
     // payable is a modifier.
