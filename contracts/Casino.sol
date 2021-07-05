@@ -6,7 +6,7 @@ pragma solidity ^0.5.0;
 
 contract Casino {
     address public owner;
-    uint256 public minimumBet;
+    uint256 public minimumBet = 100 szabo; // 0.0001 ether
     uint256 public totalBet;
     uint256 public numberOfBets;
     uint256 public maxAmountOfBets = 10;
@@ -32,6 +32,10 @@ contract Casino {
     }
 
     mapping(address => Player) public playerInfo;
+
+    event BetAdded(uint256 amount, uint256 numberSelected, address player);
+    event CasinoReset();
+    event PrizesDistributed(uint256 prizePerWinner, uint256 totalWinners);
 
     constructor(uint256 _minBet, uint256 _maxBets) public {
         owner = msg.sender;
@@ -68,15 +72,16 @@ contract Casino {
     // It means this function can receive ether when executed
     // sets value to msg.value (amount of wei)
     function bet(uint256 _numberSelected) public payable {
-        require(!checkPlayerExists(msg.sender));
-        require(_numberSelected >= 1 && _numberSelected <= 10);
-        require(msg.value >= minimumBet);
+        require(!checkPlayerExists(msg.sender), "Player already placed bet");
+        require(_numberSelected >= 1 && _numberSelected <= 10, "Number must be between 1 and 10");
+        require(msg.value >= minimumBet, "Value not greater than minimum bet");
 
         playerInfo[msg.sender].amountBet = msg.value;
         playerInfo[msg.sender].numberSelected = _numberSelected;
         numberOfBets++;
         players.push(msg.sender);
         totalBet += msg.value;
+        emit BetAdded(msg.value, _numberSelected, msg.sender);
 
         if(numberOfBets >= maxAmountOfBets) generateWinnerNumber();
     }
@@ -115,10 +120,10 @@ contract Casino {
             // this will delete all the players betting data
             delete playerInfo[playerAddress];
         }
-        resetData();
 
         // How much each winner gets
         uint256 winnerEtherAmount = totalBet / winners.length;
+        resetData();
 
         for(uint256 j = 0; j < count; j++) {
             // Check that the address in this fixed array is not empty
@@ -128,12 +133,14 @@ contract Casino {
                 winners[j].transfer(winnerEtherAmount);
             }
         }
+        emit PrizesDistributed(winnerEtherAmount, winners.length);
     }
 
-    function resetData() public {
+    function resetData() public { // TODO: emit event
         players.length = 0; // delete players array
         totalBet = 0;
         numberOfBets = 0;
+        emit CasinoReset();
     }
 
     // Fallback function in case someone sends ether to the contract,
