@@ -1,8 +1,8 @@
-const SimpleStorage = artifacts.require("./SimpleStorage.sol");
+const Casino = artifacts.require("./Casino.sol");
 
-contract("SimpleStorage", accounts => {
+contract("Casino", accounts => {
   it("...should store the value 89.", async () => {
-    const simpleStorageInstance = await SimpleStorage.deployed();
+    const simpleStorageInstance = await Casino.deployed();
 
     // Set value of 89
     await simpleStorageInstance.set(89, { from: accounts[0] });
