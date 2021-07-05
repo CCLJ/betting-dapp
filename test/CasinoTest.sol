@@ -1,4 +1,4 @@
-pragma solidity >=0.4.21 <0.7.0;
+pragma solidity ^0.5.0;
 
 import "truffle/Assert.sol";
 import "truffle/DeployedAddresses.sol";
@@ -7,7 +7,7 @@ import "../contracts/Casino.sol";
 contract TestCasino {
 
   function testItStoresAValue() public {
-    Casino casino = Casino(DeployedAddresses.Casino());
+    // Casino casino = Casino(DeployedAddresses.Casino());
 
     // casino.set(89);
 
