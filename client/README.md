@@ -1,3 +1,5 @@
+This template was setup by using `npx truffle unbox react` which uses CRA to bootrstap the react skeleton app. https://trufflesuite.com/boxes/react/
+
 This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
 
 ## Available Scripts
